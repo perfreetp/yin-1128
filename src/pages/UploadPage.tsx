@@ -26,7 +26,7 @@ const ACCEPTED = ['.jpg', '.jpeg', '.png', '.pdf', '.bmp']
 const MAX_FILES = 50
 
 export default function UploadPage() {
-  const { invoices, selectedInvoiceId, setSelectedInvoice, addInvoices, updateInvoiceCategory, updateInvoiceStatus } = useInvoiceStore()
+  const { invoices, selectedInvoiceId, setSelectedInvoice, addInvoices, updateInvoiceCategory, updateInvoiceStatus, generateMockRecognitionForInvoice } = useInvoiceStore()
   const [isDragOver, setIsDragOver] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [catDropdownOpen, setCatDropdownOpen] = useState(false)
@@ -78,6 +78,8 @@ export default function UploadPage() {
       const cats: InvoiceCategory[] = ['vat_invoice', 'reimbursement', 'receipt', 'travel_ticket']
       updateInvoiceCategory(pending[i].id, cats[Math.floor(Math.random() * cats.length)])
       updateInvoiceStatus(pending[i].id, 'classified')
+      await new Promise((r) => setTimeout(r, 300))
+      generateMockRecognitionForInvoice(pending[i].id)
     }
     setProcessing(false)
   }

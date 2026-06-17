@@ -40,10 +40,31 @@ function aggregateBy(statistics: StatisticsData[], key: 'department' | 'batchNo'
 }
 
 export default function StatisticsPage() {
-  const { statistics, dailyStats } = useInvoiceStore()
+  const { statistics, dailyStats, exportReviewResultsCSV } = useInvoiceStore()
   const [tab, setTab] = useState<TabKey>('department')
   const [exportOpen, setExportOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const downloadFile = (content: string, filename: string, mime: string) => {
+    const blob = new Blob([content], { type: mime })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleExport = (format: 'csv' | 'excel') => {
+    const csv = exportReviewResultsCSV()
+    const ext = format === 'excel' ? 'xls' : 'csv'
+    const mime = format === 'excel' ? 'application/vnd.ms-excel;charset=utf-8;' : 'text/csv;charset=utf-8;'
+    const ts = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    downloadFile(csv, `复核结果_${ts}.${ext}`, mime)
+    setExportOpen(false)
+  }
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -89,14 +110,14 @@ export default function StatisticsPage() {
           {exportOpen && (
             <div className="absolute right-0 top-full z-10 mt-1 w-36 overflow-hidden rounded-lg border border-navy-500/30 bg-navy-800 shadow-xl">
               <button
-                onClick={() => setExportOpen(false)}
+                onClick={() => handleExport('excel')}
                 className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-navy-100 hover:bg-navy-500/30"
               >
                 <FileSpreadsheet className="h-4 w-4 text-emerald-400" />
                 Excel 格式
               </button>
               <button
-                onClick={() => setExportOpen(false)}
+                onClick={() => handleExport('csv')}
                 className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-navy-100 hover:bg-navy-500/30"
               >
                 <FileSpreadsheet className="h-4 w-4 text-blue-400" />

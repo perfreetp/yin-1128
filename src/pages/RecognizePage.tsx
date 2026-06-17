@@ -21,29 +21,35 @@ const FILTER_TABS: { key: InvoiceCategory | 'all'; label: string }[] = [
   { key: 'travel_ticket', label: '行程票' },
 ]
 
-const FIELD_ITEMS: { key: keyof ExtractedFields; label: string }[] = [
-  { key: 'invoiceNumber', label: '发票号码' },
-  { key: 'amount', label: '金额' },
-  { key: 'taxAmount', label: '税额' },
-  { key: 'totalAmount', label: '价税合计' },
-  { key: 'date', label: '日期' },
-  { key: 'buyerName', label: '购买方名称' },
-  { key: 'buyerTaxId', label: '购买方税号' },
-  { key: 'sellerName', label: '销售方名称' },
-  { key: 'sellerTaxId', label: '销售方税号' },
+const FIELD_ITEMS: { key: keyof ExtractedFields; label: string; type?: string }[] = [
+  { key: 'invoiceNumber', label: '发票号码', type: 'text' },
+  { key: 'amount', label: '金额', type: 'number' },
+  { key: 'taxAmount', label: '税额', type: 'number' },
+  { key: 'totalAmount', label: '价税合计', type: 'number' },
+  { key: 'date', label: '日期', type: 'text' },
+  { key: 'buyerName', label: '购买方名称', type: 'text' },
+  { key: 'buyerTaxId', label: '购买方税号', type: 'text' },
+  { key: 'sellerName', label: '销售方名称', type: 'text' },
+  { key: 'sellerTaxId', label: '销售方税号', type: 'text' },
 ]
 
 export default function RecognizePage() {
   const [filter, setFilter] = useState<InvoiceCategory | 'all'>('all')
   const {
-    invoices, extractedFields, selectedInvoiceId,
+    invoices, extractedFields, declaredFields, selectedInvoiceId,
     setSelectedInvoice, updateExtractedField, updateInvoiceStatus, getFieldComparisons,
   } = useInvoiceStore()
 
   const filtered = filter === 'all' ? invoices : invoices.filter((i) => i.category === filter)
   const selected = invoices.find((i) => i.id === selectedInvoiceId)
-  const extracted = selectedInvoiceId ? extractedFields[selectedInvoiceId] : null
+  const extracted = selectedInvoiceId
+    ? extractedFields[selectedInvoiceId] ?? {
+        invoiceNumber: '', amount: 0, taxAmount: 0, totalAmount: 0,
+        date: '', buyerName: '', buyerTaxId: '', sellerName: '', sellerTaxId: '', confidence: 80,
+      }
+    : null
   const comparisons = selectedInvoiceId ? getFieldComparisons(selectedInvoiceId) : []
+  const hasDeclared = selectedInvoiceId ? !!declaredFields[selectedInvoiceId] : false
 
   return (
     <div className="flex h-full flex-col bg-navy-900 text-white">
@@ -97,7 +103,7 @@ export default function RecognizePage() {
         </div>
 
         <div className="flex flex-1 flex-col overflow-y-auto">
-          {!selected || !extracted ? (
+          {!selected ? (
             <div className="flex flex-1 items-center justify-center text-gray-500">
               <div className="text-center">
                 <Eye className="mx-auto mb-2 h-10 w-10 opacity-40" />
@@ -119,12 +125,17 @@ export default function RecognizePage() {
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
-                  {FIELD_ITEMS.map(({ key, label }) => (
+                  {FIELD_ITEMS.map(({ key, label, type }) => (
                     <div key={key}>
                       <label className="mb-1 block text-[11px] text-gray-400">{label}</label>
                       <input
+                        type={type}
+                        step={type === 'number' ? '0.01' : undefined}
                         value={String(extracted[key] ?? '')}
-                        onChange={(e) => updateExtractedField(selected.id, key, e.target.value)}
+                        onChange={(e) => {
+                          const v = type === 'number' ? Number(e.target.value) || 0 : e.target.value
+                          updateExtractedField(selected.id, key, v)
+                        }}
                         className="w-full rounded border border-navy-600 bg-navy-700 px-2 py-1.5 text-xs text-white outline-none focus:border-blue-500"
                       />
                       {key !== 'confidence' && (

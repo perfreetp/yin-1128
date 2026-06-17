@@ -35,7 +35,7 @@ export default function VerifyPage() {
   const {
     invoices, verificationResults, extractedFields,
     selectedInvoiceId, setSelectedInvoice,
-    runVerification, batchVerify, updateInvoiceStatus,
+    runVerification, batchVerify, createExceptionFromVerification,
   } = useInvoiceStore()
 
   const countBy = (s: VerifyStatus) =>
@@ -204,11 +204,11 @@ export default function VerifyPage() {
 
             <div className="space-y-2 pt-3 border-t border-slate-700/40">
               <button
-                onClick={() => { updateInvoiceStatus(selected.id, 'verified'); setSelectedInvoice(null) }}
+                onClick={() => { setSelectedInvoice(null) }}
                 className="w-full px-3 py-2 rounded-lg bg-emerald-600/80 hover:bg-emerald-500 text-sm text-white transition-colors"
               >强制通过</button>
               <button
-                onClick={() => { updateInvoiceStatus(selected.id, 'error'); setSelectedInvoice(null) }}
+                onClick={() => { createExceptionFromVerification(selected.id); setSelectedInvoice(null) }}
                 className="w-full px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-500 text-sm text-white transition-colors"
               >退回异常池</button>
             </div>
